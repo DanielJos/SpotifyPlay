@@ -13,6 +13,10 @@ var cors = require('cors');
 var querystring = require('querystring');
 var cookieParser = require('cookie-parser');
 
+const debug = require("debug")("sp:debug");    // debugging  "export DEBUG=testserver:debug"
+const { networkInterfaces } = require("os");
+const nets = networkInterfaces();
+
 // my addition
 
 const config = require("config");
@@ -149,5 +153,24 @@ app.get('/refresh_token', function(req, res) {
   });
 });
 
-console.log('Listening on 8888');
-app.listen(8888);
+const results = Object.create(null); // blank object to hold the os networkInterfaces object results
+
+for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+        // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
+        if (net.family === 'IPv4' && !net.internal) {
+            if (!results[name]) {
+                results[name] = [];
+            }
+            results[name].push(net.address);
+        }
+    }
+}
+
+
+const ip_address = results.en0      || results.enp1s0 || results.wlp3s0;
+const port       = process.env.PORT || 8888;
+// http listener created on ${ip_address}:${port}
+app.listen(port, ip_address , ()=>{    // replace this with ann automatic detection of IP
+    debug(`Listening on: ${ip_address}:${port}`)
+    });
