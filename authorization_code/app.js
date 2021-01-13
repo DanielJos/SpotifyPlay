@@ -16,6 +16,8 @@ var cookieParser = require('cookie-parser');
 const debug = require("debug")("sp:debug");    // debugging  "export DEBUG=testserver:debug"
 const { networkInterfaces } = require("os");
 const nets = networkInterfaces();
+const d_g = require("../dank_gammon/app.js"); 
+const dbms = require("../dank_gammon/dbms.js");
 
 // my addition
 
@@ -25,7 +27,25 @@ const config = require("config");
 
 var client_id = config.get("cli-id"); // Your client id
 var client_secret = config.get("cli-secret"); // Your secret
-var redirect_uri = 'http://localhost:8888/callback/'; // Your redirect uri
+var redirect_uri = 'http://192.168.1.192:8888/callback/'; // Your redirect uri
+
+// Get network deets
+const results = Object.create(null); // blank object to hold the os networkInterfaces object results
+
+for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+        // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
+        if (net.family === 'IPv4' && !net.internal) {
+            if (!results[name]) {
+                results[name] = [];
+            }
+            results[name].push(net.address);
+        }
+    }
+}
+
+const ip_address = results.en0      || results.enp1s0 || results.wlp3s0;
+const port       = process.env.PORT || 8888;
 
 /**
  * Generates a random string containing numbers and letters
@@ -101,7 +121,7 @@ app.get('/callback', function(req, res) {
 
         var access_token = body.access_token,
             refresh_token = body.refresh_token;
-
+	
         var options = {
           url: 'https://api.spotify.com/v1/me',
           headers: { 'Authorization': 'Bearer ' + access_token },
@@ -110,11 +130,17 @@ app.get('/callback', function(req, res) {
 
         // use the access token to access the Spotify Web API
         request.get(options, function(error, response, body) {
-          console.log(body);
+          // console.log(body);
+          let user = {'body' 	: body.id,
+          	'pp_url' 	: body.images.url,
+          	'disp_name' 	: body.display_name,
+          	'email' 	: body.email
+          }          
+          dbms.user_in(access_token, user);
         });
 
         // we can also pass the token to the browser to make requests from there
-        res.redirect('http://localhost:3000/#' +
+        res.redirect('http://192.168.1.192:8888/#' +
           querystring.stringify({
             access_token: access_token,
             refresh_token: refresh_token
@@ -153,23 +179,7 @@ app.get('/refresh_token', function(req, res) {
   });
 });
 
-const results = Object.create(null); // blank object to hold the os networkInterfaces object results
 
-for (const name of Object.keys(nets)) {
-    for (const net of nets[name]) {
-        // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
-        if (net.family === 'IPv4' && !net.internal) {
-            if (!results[name]) {
-                results[name] = [];
-            }
-            results[name].push(net.address);
-        }
-    }
-}
-
-
-const ip_address = results.en0      || results.enp1s0 || results.wlp3s0;
-const port       = process.env.PORT || 8888;
 // http listener created on ${ip_address}:${port}
 app.listen(port, ip_address , ()=>{    // replace this with ann automatic detection of IP
     debug(`Listening on: ${ip_address}:${port}`)
