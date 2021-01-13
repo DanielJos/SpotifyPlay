@@ -1,4 +1,13 @@
-const got = require('got');
+const got 	= require('got');
+const _ 	= require('lodash');
+const Datastore = require('nedb');
+
+
+options = {
+	filename : './db/collaboration_collection',
+	timestampData : true
+}
+db = new Datastore(options);
 
 const instance = got.extend({
 	hooks: {
@@ -16,19 +25,35 @@ const instance = got.extend({
 
 async function user_in (access_token, user)
 	{
+		db.loadDatabase ((err) => {console.log(err); return;})
+		
 		const context = {
 			Authorization: 'Bearer ' + access_token 
 		};
+		let collaborative_playlists = [];
 		
-		const response = await instance('https://api.spotify.com/v1/me/playlists', {context});
-		// headers: { 'Authorization': 'Bearer ' + access_token },
+		const response = await instance('https://api.spotify.com/v1/me/playlists?limit=50&offset=0', {context}).json();		
+		_.map(response.items, (o) => { 
+			if (o.collaborative== true) { collaborative_playlists.push({ name : o.name, id : o.id })}
+			return
+		});
 		
-		playlists = response.body;
+		total = response.total - 50;
+		offset = 50;
 		
-		// TODO
-//		collaborative_playlists = playlists.filter(playlists => playlists.collaborative == true);
+		while (total > 0)
+		{
+			const response = await instance(`https://api.spotify.com/v1/me/playlists?limit=50&offset=${offset}`, {context}).json();		
+			_.map(response.items, (o) => { 
+				if (o.collaborative== true) { collaborative_playlists.push({ name : o.name, id : o.id })}
+				return
+			});
+			total -= 50;
+			offset += 50;
+		}
 		
-//		console.log(collaborative_playlists); 
+		console.log(collaborative_playlists);
+
 	}
 	
 	
