@@ -76,7 +76,7 @@ app.get('/login', function(req, res) {
   res.cookie(stateKey, state);
 
   // your application requests authorization
-  var scope = 'user-read-private user-read-email user-read-playback-state playlist-read-collaborative playlist-modify-public playlist-read-private';
+  var scope = 'user-read-private user-read-email user-read-playback-state user-read-recently-played playlist-read-collaborative playlist-modify-public playlist-read-private user-top-read';
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
       response_type: 'code',
@@ -131,7 +131,7 @@ app.get('/callback', function(req, res) {
         // use the access token to access the Spotify Web API
         request.get(options, function(error, response, body) {
           // console.log(body);
-          let user = {'body' 	: body.id,
+          let user = {'id' 	: body.id,
           	'pp_url' 	: body.images.url,
           	'disp_name' 	: body.display_name,
           	'email' 	: body.email
