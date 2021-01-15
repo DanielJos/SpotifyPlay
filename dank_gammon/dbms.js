@@ -4,10 +4,29 @@ const Datastore = require('nedb');
 
 
 options = {
-	filename : '..rm/db/playlist_collection',
+	filename: '../db/playlist_collection',
+	timestampData: true
+}
+
+upd_opts = {
+	upsert: true,
+}
+
+index_opts = {
+	fieldName: 'tracks.id',
+	unique: 'true',
+}
+
+pl_db = new Datastore(options);
+
+options = {
+	filename : '../db/user_collection',
 	timestampData : true
 }
-db = new Datastore(options);
+user_db = new Datastore(options);
+
+pl_db.ensureIndex(index_opts, (err)=>{});
+pl_db.persistence.setAutocompactionInterval(30*1000)
 
 const instance = got.extend({
 	hooks: {
@@ -23,13 +42,69 @@ const instance = got.extend({
 	}
 });
 
-async function user_in (access_token, user)
+function dbms (access_token, user)
 {
-	db.loadDatabase ((err) => {console.log(err); return;})
+	pl_db.loadDatabase ((err) => {console.log(err); return;})
+	user_db.loadDatabase ((err) => {console.log(err); return;})
 	
 	const context = {
 		Authorization: 'Bearer ' + access_token 
 	};
+	
+	let unix_time = Math.floor(new Date() / 1000);
+	let date_object = new Date(unix_time * 1000);
+	let date_time = date_object.toLocaleString();
+	
+	console.log(`Getting data for ${user.disp_name} (id: ${user.id}) at ${date_time}...`);
+	playlist_process(context);
+	get_top_tracks(context);
+	
+		// console.log("fiejefijeifjijefefjifij");
+	
+
+
+}
+
+async function playlist_process(context)
+{
+	let collaborative_playlists = await get_playlists(context);
+	console.log("Collab playlists out");
+	let playlist_tracks = await get_playlist_tracks(context, collaborative_playlists);
+	console.log("playlist songs out");
+	
+	insert_playlists(playlist_tracks);
+	console.log("Saved to DB");
+}
+
+function insert_playlists(playlist_songs)
+{
+	for (let track of playlist_songs)
+	{
+		let track_object = {id: track.track.id, added_at: track.added_at, added_by: track.adder.id}
+		pl_db.update( {_id: track.playlist.id, name: track.playlist.name}, {$push: { tracks: track_object }}, upd_opts, (err, numAffected, affectedDocs, upsert)=>{if(err) console.log("Duplicated Track");} );
+		
+		/*														
+		pl_db.findOne ({}, (err, doc) => {
+			let track_object = {id: track.track.id, added_at: track.added_at, added_by: track.adder.id}
+			if (!doc)
+			{
+				pl_db.insert( {_id: track.playlist.id, name: track.playlist.name, tracks: [ track_object ]});
+				console.log('New playlist added');
+			}
+			else
+			{
+				console.log("adding " + track_object);
+				pl_db.update( {_id: track.playlist.id}, {$push: { tracks: track_object }}, {}, ()=>{} );
+				
+			}
+		});
+		*/
+	}
+	console.log("Added to DB");
+}
+
+async function get_playlists(context)
+{
 	let collaborative_playlists = [];
 	
 	const response = await instance('https://api.spotify.com/v1/me/playlists?limit=50&offset=0', {context}).json();		
@@ -38,8 +113,8 @@ async function user_in (access_token, user)
 		return
 	});
 	
-	total = response.total - 50;
-	offset = 50;
+	total 	= response.total - 50;
+	offset 	= 50;
 	
 	while (total > 0)
 	{
@@ -51,25 +126,21 @@ async function user_in (access_token, user)
 		total 	-= 50;
 		offset 	+= 50;
 	}
-	
-	console.log(`Getting data for ${user.disp_name} (id: ${user.id})...`);
-	let songs = await get_playlist_songs(context, collaborative_playlists);
-	let top_tracks = await get_top_tracks(context);
-	await get_recent_tracks(context);
+	console.log(collaborative_playlists);
+	return collaborative_playlists;
 }
 	
-async function get_playlist_songs(context, collaborative_playlists)
+async function get_playlist_tracks(context, collaborative_playlists)
 {
-	songs = [];
+	tracks = [];
 	for (playlist of collaborative_playlists)
 	{
-		const response = await instance(`https://api.spotify.com/v1/playlists/${playlist.id}/tracks`, {context}).json();	
+		const response = await instance(`https://api.spotify.com/v1/playlists/${playlist.id}/tracks`, {context}).json();
 		_.map(response.items, (o) => {
-			songs.push({ playlist : playlist.name, track_id : o.track.id, adder : o.added_by, time : o.added_at }); 
-			// just get track id
+			tracks.push({ playlist: {id: playlist.id, name: playlist.name}, track: {id: o.track.id, name: o.track.name}, adder: o.added_by, added_at: o.added_at }); 
 		});	
 	}
-	return songs;
+	return tracks;
 }
 
 async function get_top_tracks(context)
@@ -137,8 +208,33 @@ async function get_top_tracks(context)
 		offset 	+= 50;
 	}
 	
-	return { long_term_track_ids : long_term_top_tracks, medium_term_track_ids : medium_term_top_tracks, short_term_track_ids : short_term_top_tracks };
+	let top_tracks = { long_term_track_ids : long_term_top_tracks, medium_term_track_ids : medium_term_top_tracks, short_term_track_ids : short_term_top_tracks };
+	console.log("Top tracks out");
 }
+
+/*
+This doesn't work, it seems only the last 50 are available:((((
+
+async function get_historic_tracks(context, current_unix)
+{
+	let tracks = [];
 	
+	let items_num 	= 50;
+	let after 	= current_unix;
+	let response = 1;
 	
-module.exports.user_in = user_in;
+	//while (response)
+	//{
+		response = await instance(`https://api.spotify.com/v1/me/player/recently-played?limit=50&after=1577836800`, {context}).json();
+		//response = await instance(response.next, {context}).json();
+		console.log(response);
+		// if (response) after = response.cursors.before;
+		_.map(response.items, (o) => {
+			console.log(`${o.track.name} : ${o.played_at}`);
+			//tracks.push( {track_id : o.track.id, played_at : o.played_at} );
+		});	
+	//}	
+}
+*/
+	
+module.exports.dbms = dbms;

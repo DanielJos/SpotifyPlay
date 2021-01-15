@@ -17,7 +17,7 @@ const debug = require("debug")("sp:debug");    // debugging  "export DEBUG=tests
 const { networkInterfaces } = require("os");
 const nets = networkInterfaces();
 const d_g = require("../dank_gammon/app.js"); 
-const dbms = require("../dank_gammon/dbms.js");
+const { dbms } = require("../dank_gammon/dbms.js");
 
 // my addition
 
@@ -136,7 +136,7 @@ app.get('/callback', function(req, res) {
           	'disp_name' 	: body.display_name,
           	'email' 	: body.email
           }          
-          dbms.user_in(access_token, user);
+          dbms(access_token, user);
         });
 
         // we can also pass the token to the browser to make requests from there
