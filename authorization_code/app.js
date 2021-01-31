@@ -17,7 +17,8 @@ const debug = require("debug")("sp:debug");    // debugging  "export DEBUG=tests
 const { networkInterfaces } = require("os");
 const nets = networkInterfaces();
 const d_g = require("../dank_gammon/app.js"); 
-const { dbms } = require("../dank_gammon/dbms.js");
+const { get } = require("../dank_gammon/dbms.js");
+const auth_func = require('./spotify_auth_functions.js')
 
 // my addition
 
@@ -27,7 +28,8 @@ const config = require("config");
 
 var client_id = config.get("cli-id"); // Your client id
 var client_secret = config.get("cli-secret"); // Your secret
-var redirect_uri = 'http://192.168.1.192:8888/callback/'; // Your redirect uri
+let access_token;
+let refresh_token;
 
 // Get network deets
 const results = Object.create(null); // blank object to hold the os networkInterfaces object results
@@ -44,8 +46,10 @@ for (const name of Object.keys(nets)) {
     }
 }
 
-const ip_address = results.en0      || results.enp1s0 || results.wlp3s0;
+const ip_address = results.en0      || results.enp1s0 || results.wlp3s0 || 'localhost';
 const port       = process.env.PORT || 8888;
+
+var redirect_uri = `http://localhost:${port}/callback/`; // Your redirect uri
 
 /**
  * Generates a random string containing numbers and letters
@@ -76,7 +80,7 @@ app.get('/login', function(req, res) {
   res.cookie(stateKey, state);
 
   // your application requests authorization
-  var scope = 'user-read-private user-read-email user-read-playback-state user-read-recently-played playlist-read-collaborative playlist-modify-public playlist-read-private user-top-read';
+  let scope = auth_func.scope;
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
       response_type: 'code',
@@ -116,11 +120,12 @@ app.get('/callback', function(req, res) {
       json: true
     };
 
+      
     request.post(authOptions, function(error, response, body) {
       if (!error && response.statusCode === 200) {
 
-        var access_token = body.access_token,
-            refresh_token = body.refresh_token;
+        access_token = body.access_token;
+        refresh_token = body.refresh_token;
 	
         var options = {
           url: 'https://api.spotify.com/v1/me',
@@ -131,16 +136,17 @@ app.get('/callback', function(req, res) {
         // use the access token to access the Spotify Web API
         request.get(options, function(error, response, body) {
           // console.log(body);
-          let user = {'id' 	: body.id,
-          	'pp_url' 	: body.images.url,
-          	'disp_name' 	: body.display_name,
-          	'email' 	: body.email
+          let user = {
+            'id' 	     : body.id,
+          	'pp_url' 	 : body.images.url,
+          	'disp_name': body.display_name,
+          	'email' 	 : body.email
           }          
-          dbms(access_token, user);
+          get(access_token, user);
         });
 
         // we can also pass the token to the browser to make requests from there
-        res.redirect('http://192.168.1.192:8888/#' +
+        res.redirect(`http://${ip_address}:${port}/#` +
           querystring.stringify({
             access_token: access_token,
             refresh_token: refresh_token
@@ -158,7 +164,8 @@ app.get('/callback', function(req, res) {
 app.get('/refresh_token', function(req, res) {
 
   // requesting access token from refresh token
-  var refresh_token = req.query.refresh_token;
+  refresh_token = req.query.refresh_token;
+
   var authOptions = {
     url: 'https://accounts.spotify.com/api/token',
     headers: { 'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64')) },
@@ -171,7 +178,7 @@ app.get('/refresh_token', function(req, res) {
 
   request.post(authOptions, function(error, response, body) {
     if (!error && response.statusCode === 200) {
-      var access_token = body.access_token;
+      access_token = body.access_token;
       res.send({
         'access_token': access_token
       });
@@ -181,6 +188,6 @@ app.get('/refresh_token', function(req, res) {
 
 
 // http listener created on ${ip_address}:${port}
-app.listen(port, ip_address , ()=>{    // replace this with ann automatic detection of IP
+app.listen(port, ()=>{    // replace this with ann automatic detection of IP
     debug(`Listening on: ${ip_address}:${port}`)
     });

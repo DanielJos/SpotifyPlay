@@ -2,7 +2,6 @@ const got 	= require('got');
 const _ 	= require('lodash');
 const Datastore = require('nedb');
 
-
 options = {
 	filename: '../db/playlist_collection',
 	timestampData: true
@@ -28,6 +27,9 @@ user_db = new Datastore(options);
 pl_db.ensureIndex(index_opts, (err)=>{});
 pl_db.persistence.setAutocompactionInterval(30*1000)
 
+pl_db.loadDatabase ((err) => {console.log(err); return;})
+user_db.loadDatabase ((err) => {console.log(err); return;})
+
 const instance = got.extend({
 	hooks: {
 		beforeRequest: [
@@ -42,11 +44,8 @@ const instance = got.extend({
 	}
 });
 
-function dbms (access_token, user)
-{
-	pl_db.loadDatabase ((err) => {console.log(err); return;})
-	user_db.loadDatabase ((err) => {console.log(err); return;})
-	
+function get (access_token, user)
+{	
 	const context = {
 		Authorization: 'Bearer ' + access_token 
 	};
@@ -57,12 +56,8 @@ function dbms (access_token, user)
 	
 	console.log(`Getting data for ${user.disp_name} (id: ${user.id}) at ${date_time}...`);
 	playlist_process(context);
-	get_top_tracks(context);
-	
-		// console.log("fiejefijeifjijefefjifij");
-	
-
-
+	// get_top_tracks(context);
+	// get_historic_tracks(context, unix_time);
 }
 
 async function playlist_process(context)
@@ -212,9 +207,6 @@ async function get_top_tracks(context)
 	console.log("Top tracks out");
 }
 
-/*
-This doesn't work, it seems only the last 50 are available:((((
-
 async function get_historic_tracks(context, current_unix)
 {
 	let tracks = [];
@@ -225,7 +217,7 @@ async function get_historic_tracks(context, current_unix)
 	
 	//while (response)
 	//{
-		response = await instance(`https://api.spotify.com/v1/me/player/recently-played?limit=50&after=1577836800`, {context}).json();
+		response = await instance(`https://api.spotify.com/v1/me/player/recently-played?limit=50&after=${current_unix}`, {context}).json();
 		//response = await instance(response.next, {context}).json();
 		console.log(response);
 		// if (response) after = response.cursors.before;
@@ -235,6 +227,7 @@ async function get_historic_tracks(context, current_unix)
 		});	
 	//}	
 }
-*/
 	
-module.exports.dbms = dbms;
+module.exports = {
+	get: get
+}
