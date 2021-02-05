@@ -1,0 +1,3 @@
+Rework: compartmentalise the auth server and then the server to Spotify components
+
+Have the auth token update at intervals in the DB (and refresh), then have the spotify api sys do its tasks at intervals reading from that DB (if invalid then no trigger)
