@@ -141,7 +141,6 @@ app.get('/callback', function(req, res) {
           my_user.name    = body.display_name;
           my_user.pp_url  = body.images[0].url;
 
-          // console.log(my_user);
           userman.update_token(my_user, expires_in);
         });
 
@@ -185,8 +184,14 @@ app.get('/refresh_token', function(req, res) {
   });
 });
 
+function listen ()
+{
+  // http listener created on ${ip_address}:${port}
+  app.listen(port, ip_address, ()=>{
+      debug(`Listening on: ${ip_address}:${port}`)
+      });
+}
 
-// http listener created on ${ip_address}:${port}
-app.listen(port, ip_address, ()=>{
-    debug(`Listening on: ${ip_address}:${port}`)
-    });
+  module.exports = {
+    listen: listen
+  }

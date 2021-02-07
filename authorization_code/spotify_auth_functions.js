@@ -3,16 +3,13 @@ const config = require("config");
 var request = require('request'); // "Request" library
 
 let scope = 'user-read-private user-read-email user-read-playback-state user-read-recently-played playlist-read-collaborative playlist-modify-public playlist-read-private user-top-read';
-let access_token_g;
-let refresh_token_g;
 let client_id = config.get("cli-id"); // Your client id
 let client_secret = config.get("cli-secret"); // Your secret
 
-async function refresh (refresh_token)
+async function refresh (user)
 {
     refresh_token_g = refresh_token;
-    var authOptions = 
-    {
+    var authOptions = {
         url: 'https://accounts.spotify.com/api/token',
         headers: { 'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64')) },
         form: {

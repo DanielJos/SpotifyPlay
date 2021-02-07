@@ -23,7 +23,6 @@ function update_token (user, expire_time)
     let unix_time = Math.floor(new Date() / 1000);
     user.expire_time = unix_time + expire_time;
 
-    // console.log(user);
 
     if(val.validate(user))
     {
