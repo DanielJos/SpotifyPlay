@@ -16,20 +16,10 @@ var cookieParser = require('cookie-parser');
 const debug = require("debug")("sp:debug");    // debugging  "export DEBUG=testserver:debug"
 const { networkInterfaces } = require("os");
 const nets = networkInterfaces();
-const d_g = require("../dank_gammon/app.js"); 
-const { get } = require("../dank_gammon/dbms.js");
-const auth_func = require('./spotify_auth_functions.js')
-
-// my addition
-
+// const d_g = require("../dank_gammon/app.js"); 
+// const dbms = require("../dank_gammon/dbms.js");
+const userman = require("../db/user_man.js");
 const config = require("config");
-
-// my additions end
-
-var client_id = config.get("cli-id"); // Your client id
-var client_secret = config.get("cli-secret"); // Your secret
-let access_token;
-let refresh_token;
 
 // Get network deets
 const results = Object.create(null); // blank object to hold the os networkInterfaces object results
@@ -46,11 +36,14 @@ for (const name of Object.keys(nets)) {
     }
 }
 
+// const ip_address = results.en0      || results.enp1s0 || results.wlp3s0 || '192.168.0.33';
 const ip_address = results.en0      || results.enp1s0 || results.wlp3s0 || 'localhost';
+
 const port       = process.env.PORT || 8888;
 
-var redirect_uri = `http://localhost:${port}/callback/`; // Your redirect uri
-
+var client_id = config.get("cli-id"); // Your client id
+var client_secret = config.get("cli-secret"); // Your secret
+var redirect_uri = `http://${ip_address}:8888/callback/`; // Your redirect uri
 /**
  * Generates a random string containing numbers and letters
  * @param  {number} length The length of the string
@@ -124,32 +117,39 @@ app.get('/callback', function(req, res) {
     request.post(authOptions, function(error, response, body) {
       if (!error && response.statusCode === 200) {
 
-        access_token = body.access_token;
-        refresh_token = body.refresh_token;
-	
-        var options = {
+        let my_user = {};
+
+        my_user.access_tok  = body.access_token;
+        my_user.refresh_tok = body.refresh_token;
+        expires_in          = body.expires_in;
+
+        let options = {
           url: 'https://api.spotify.com/v1/me',
-          headers: { 'Authorization': 'Bearer ' + access_token },
+          headers: { 'Authorization': 'Bearer ' + my_user.access_tok },
           json: true
         };
 
         // use the access token to access the Spotify Web API
         request.get(options, function(error, response, body) {
           // console.log(body);
-          let user = {
-            'id' 	     : body.id,
-          	'pp_url' 	 : body.images.url,
-          	'disp_name': body.display_name,
-          	'email' 	 : body.email
-          }          
-          get(access_token, user);
+          let user = {'id' 	: body.id,
+          	'pp_url' 	: body.images.url,
+          	'disp_name' 	: body.display_name,
+          	'email' 	: body.email
+          }         
+
+          my_user._id     = body.id;
+          my_user.name    = body.display_name;
+          my_user.pp_url  = body.images[0].url;
+
+          userman.update_token(my_user, expires_in);
         });
 
         // we can also pass the token to the browser to make requests from there
-        res.redirect(`http://${ip_address}:${port}/#` +
+        res.redirect(`http://${ip_address}:8888/#` +
           querystring.stringify({
-            access_token: access_token,
-            refresh_token: refresh_token
+            access_token: my_user.access_tok,
+            refresh_token:my_user.refresh_tok
           }));
       } else {
         res.redirect('/#' +
@@ -186,8 +186,14 @@ app.get('/refresh_token', function(req, res) {
   });
 });
 
+function listen ()
+{
+  // http listener created on ${ip_address}:${port}
+  app.listen(port, ip_address, ()=>{
+      debug(`Listening on: ${ip_address}:${port}`)
+      });
+}
 
-// http listener created on ${ip_address}:${port}
-app.listen(port, ()=>{    // replace this with ann automatic detection of IP
-    debug(`Listening on: ${ip_address}:${port}`)
-    });
+  module.exports = {
+    listen: listen
+  }
