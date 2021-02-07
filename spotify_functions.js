@@ -8,6 +8,20 @@ let scope = 'user-read-private user-read-email user-read-playback-state user-rea
 let client_id = config.get("cli-id"); // Your client id
 let client_secret = config.get("cli-secret"); // Your secret
 
+const instance = got.extend({
+	hooks: {
+		beforeRequest: [
+			options => {
+				if (!options.context || !options.context.Authorization) {
+					throw new Error('Token required');
+				}
+
+				options.headers.Authorization = options.context.Authorization;
+			}
+		]
+	}
+});
+
 // Module Exports //
 
 function refresh (user)
@@ -40,10 +54,12 @@ async function get (user)
     const context = {
 		Authorization: 'Bearer ' + user.access_tok
     };
-    console.log(`Getting data for ${user.disp_name} (id: ${user.id}) at ${date_time}...`);
+    console.log(`Getting data for ${user.name} (id: ${user._id})...`);
     let collaborative_playlists = await get_playlists(context);
+    let playlist_tracks = await get_playlist_tracks(context, collaborative_playlists);
+    console.log(playlist_tracks);
+    // insert_playlists(playlist_tracks);
 }
-
 
 // Local Functions //
 
@@ -74,7 +90,20 @@ async function get_playlists(context)
 	return collaborative_playlists;
 }
 
+async function get_playlist_tracks(context, collaborative_playlists)
+{
+	tracks = [];
+	for (playlist of collaborative_playlists)
+	{
+		const response = await instance(`https://api.spotify.com/v1/playlists/${playlist.id}/tracks`, {context}).json();
+		_.map(response.items, (o) => {
+			tracks.push({ playlist: {id: playlist.id, name: playlist.name}, track: {id: o.track.id, name: o.track.name}, adder: o.added_by, added_at: o.added_at }); 
+		});	
+	}
+	return tracks;
+}
+
 module.exports = {
-    refresh: refresh,
-    get: get 
+    refresh:    refresh,
+    get:        get 
 }

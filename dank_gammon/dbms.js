@@ -8,9 +8,6 @@ options = {
 }
 
 
-pl_db.loadDatabase ((err) => {console.log(err); return;})
-user_db.loadDatabase ((err) => {console.log(err); return;})
-
 const instance = got.extend({
 	hooks: {
 		beforeRequest: [

@@ -73,7 +73,7 @@ app.get('/login', function(req, res) {
   res.cookie(stateKey, state);
 
   // your application requests authorization
-  let scope = auth_func.scope;
+  var scope = 'user-read-private user-read-email user-read-playback-state user-read-recently-played playlist-read-collaborative playlist-modify-public playlist-read-private user-top-read';
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
       response_type: 'code',
@@ -113,7 +113,6 @@ app.get('/callback', function(req, res) {
       json: true
     };
 
-      
     request.post(authOptions, function(error, response, body) {
       if (!error && response.statusCode === 200) {
 
@@ -164,8 +163,7 @@ app.get('/callback', function(req, res) {
 app.get('/refresh_token', function(req, res) {
 
   // requesting access token from refresh token
-  refresh_token = req.query.refresh_token;
-
+  var refresh_token = req.query.refresh_token;
   var authOptions = {
     url: 'https://accounts.spotify.com/api/token',
     headers: { 'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64')) },
@@ -178,7 +176,7 @@ app.get('/refresh_token', function(req, res) {
 
   request.post(authOptions, function(error, response, body) {
     if (!error && response.statusCode === 200) {
-      access_token = body.access_token;
+      var access_token = body.access_token;
       res.send({
         'access_token': access_token
       });
