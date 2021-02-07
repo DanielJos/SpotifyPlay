@@ -1,7 +1,7 @@
 const Datastore = require('nedb');
 const { listen } = require('./authorization_code/app.js');
-const userman = require('./db/user_man.js');
 const serv = require("./authorization_code/app.js")
+const spotify = require("./spotify_functions.js")
 
 options = {
 	filename : './db/user_collection',
@@ -11,9 +11,7 @@ options = {
 
 db = new Datastore(options);
 
-
-
-update_interval_secs = 2
+update_interval_secs = 4
 
 oversee();
 serv.listen();
@@ -27,14 +25,16 @@ function check_expiration ()
 {
     db.loadDatabase ((err) => {if(err){console.log(err)}; return;});
     let current_unix_time = Math.floor(new Date() / 1000); 
-    console.log(current_unix_time);
+
+    // Will update the ACCESS TOKEN when the current time is within 1.5x the check REFRESH TIME
+    // (worst case being two refresh at 1.5*interval and 0.5 interval. However preferable to loss of access token)
     db.find({ expire_time: { $lte: current_unix_time - 1.5*update_interval_secs} }, (err, docs) => {
         if(!err)
         {
-            // console.log(docs)
-            for (doc of docs)
+            for (user of docs)
             {
-                console.log(doc.expire_time + "\n");
+                console.log(user.expire_time + "\n");
+                spotify.refresh(user);
             }
         }
         else
