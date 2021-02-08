@@ -44,9 +44,7 @@ function refresh (user)
         user.access_tok = body.access_token;
         user.is_expired = false;
         expires_in = body.expires_in;
-        userman.update_user(user, expires_in);
-        console.log("Refreshed!");
-    }
+        userman.update_user(user, expires_in);    }
     });
 }
 

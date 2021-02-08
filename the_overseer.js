@@ -38,12 +38,14 @@ function check_expiration ()
         {
             for (user of docs)
             {
+                console.log("checking:")
                 if ( current_unix_time >= user.expire_time  )
                 {
                     user.is_expired = true;
                     console.log(user.name + " is expired:(");
                 }
-                else if ( user.expire_time <= current_unix_time - 1.5*expiration_interval_secs )
+                // else if ( user.expire_time <= current_unix_time - 1.5*expiration_interval_secs )
+                else if ( current_unix_time >= user.expire_time - 1.5*expiration_interval_secs  )
                 {
                     console.log(user.name + " refreshed!");
                     spotify.refresh(user); 
@@ -61,7 +63,7 @@ function check_expiration ()
 function get_user_playlist_data()
 {
     current_unix_time = Math.floor(new Date() / 1000);
-    db.find({ expire_time: { $gt: current_unix_time } }, (err, docs) => {
+    db.find({ is_expired: false }, (err, docs) => {
         if(!err)
         {
             for (user of docs)
