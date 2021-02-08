@@ -22,7 +22,7 @@ let current_unix_time;
 function oversee ()
 {
     setInterval(check_expiration, expiration_interval_secs*1000 );
-    setInterval(get_user_playlist_data, playlist_interval_secs*1000 );
+    // setInterval(get_user_playlist_data, playlist_interval_secs*1000 );
     
 }
 
@@ -33,13 +33,21 @@ function check_expiration ()
 
     // Will update the ACCESS TOKEN when the current time is within 1.5x the check REFRESH TIME
     // (worst case being two refresh at 1.5*interval and 0.5 interval. However preferable to loss of access token)
-    db.find({ expire_time: { $lte: current_unix_time - 1.5*playlist_interval_secs} }, (err, docs) => {
+    db.find({ }, (err, docs) => {
         if(!err)
         {
             for (user of docs)
             {
-                console.log(user.expire_time + "\n");
-                spotify.refresh(user);
+                if ( current_unix_time >= user.expire_time  )
+                {
+                    user.is_expired = true;
+                    console.log(user.name + " is expired:(");
+                }
+                else if ( user.expire_time <= current_unix_time - 1.5*expiration_interval_secs )
+                {
+                    console.log(user.name + " refreshed!");
+                    spotify.refresh(user); 
+                }                
             }
         }
         else

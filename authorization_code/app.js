@@ -141,7 +141,7 @@ app.get('/callback', function(req, res) {
           my_user.name    = body.display_name;
           my_user.pp_url  = body.images[0].url;
 
-          userman.update_token(my_user, expires_in);
+          userman.update_user(my_user, expires_in);
         });
 
         // we can also pass the token to the browser to make requests from there

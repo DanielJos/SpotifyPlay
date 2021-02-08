@@ -19,12 +19,12 @@ db.persistence.setAutocompactionInterval(30*1000);
 db.loadDatabase ((err) => {console.log(err); return;});
 
 // take the USER ID and update the user entry with the given ACCESS TOKEN
-function update_token (user, expire_time)
+function update_user (user, expire_time)
 {
     let unix_time = Math.floor(new Date() / 1000);
     // user.expire_time = unix_time + 5;
     user.expire_time = unix_time + expire_time;
-
+    user.is_expired = false;
 
     if(val.validate(user))
     {
@@ -40,5 +40,5 @@ function update_token (user, expire_time)
 }
 
 module.exports = {
-	update_token: update_token
+	update_user: update_user
 }
