@@ -1,4 +1,4 @@
-const Validator = require('jsonSchema').Validator
+const Validator = require('jsonschema').Validator
 let v = new Validator();
 
 let user_schema = {

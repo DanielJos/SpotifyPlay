@@ -12,7 +12,7 @@ options = {
 db = new Datastore(options);
 
 expiration_interval_secs    = 4;
-playlist_interval_secs      = 60;
+playlist_interval_secs      = 100;
 
 oversee();
 serv.listen();
@@ -22,7 +22,7 @@ let current_unix_time;
 function oversee ()
 {
     setInterval(check_expiration, expiration_interval_secs*1000 );
-    // setInterval(get_user_playlist_data, playlist_interval_secs*1000 );
+    setInterval(get_user_data, playlist_interval_secs*1000 );
     
 }
 
@@ -38,7 +38,6 @@ function check_expiration ()
         {
             for (user of docs)
             {
-                console.log("checking:")
                 if ( current_unix_time >= user.expire_time  )
                 {
                     user.is_expired = true;
@@ -60,7 +59,7 @@ function check_expiration ()
     });
 }
 
-function get_user_playlist_data()
+function get_user_data()
 {
     current_unix_time = Math.floor(new Date() / 1000);
     db.find({ is_expired: false }, (err, docs) => {
