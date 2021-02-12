@@ -1,2 +1,4 @@
 node_modules/
-db/
+db/playlist_collection/
+db/user_collection/
+db/track_collection/
