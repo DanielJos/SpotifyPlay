@@ -44,7 +44,7 @@ function refresh (user)
         user.access_tok = body.access_token;
         user.is_expired = false;
         expires_in = body.expires_in;
-        userman.update_user(user, expires_in);    }
+        userman.refresh_user(user, expires_in); }
     });
 }
 
@@ -112,14 +112,14 @@ async function get_historic_tracks(context, user_id)
 
 	response = await instance(`https://api.spotify.com/v1/me/player/recently-played?limit=50&after=${current_unix_time}`, {context}).json();
 	//response = await instance(response.next, {context}).json();
-	// console.log(response);
+	console.log(response);
 	// if (response) after = response.cursors.before;
 	_.map(response.items, (o) => {
 		// console.log(`${o.track.name} : ${o.played_at}`);
-		tracks.push( {name: o.track.name, track_id: o.track.id, played_at: o.played_at} );
+		// tracks.push( {name: o.track.name, track_id: o.track.id, played_at: o.played_at} );
 	});	
 
-	userman.insert_tracks(user_id, tracks);
+	// userman.insert_tracks(user_id, tracks);
 }
 
 module.exports = {
