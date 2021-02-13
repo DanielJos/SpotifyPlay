@@ -1,1 +1,0 @@
-worker: node the_overseer.js

@@ -187,7 +187,7 @@ app.get('/refresh_token', function(req, res) {
 function listen ()
 {
   // http listener created on ${ip_address}:${port}
-  app.listen(port, ip_address, ()=>{
+  app.listen(port, ()=>{
       debug(`Listening on: ${ip_address}:${port}`)
       });
 }
