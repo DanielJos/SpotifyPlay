@@ -26,8 +26,8 @@ options = {
 track_db = new Datastore(options);
 
 // user_db.ensureIndex(index_opts, (err)=>{});
-user_db.persistence.setAutocompactionInterval(30*1000);
-track_db.persistence.setAutocompactionInterval(30*1000);
+user_db.persistence.setAutocompactionInterval(1*1000);
+track_db.persistence.setAutocompactionInterval(1*1000);
 
 user_db.loadDatabase ((err) => {console.log(err); return;});
 track_db.loadDatabase();
@@ -83,10 +83,11 @@ function insert_tracks (user, tracks)
     for(track of tracks)
     {
         track_alt = track;
-        track_alt._id = track.played_at + user.id;
-        track_alt.user = {id: user.id, name: user.name };
+        track_alt._id = track.played_at + user._id;
+        track_alt.user = {}
+        track_alt.user.id = user._id
         // track_alt.user.id = user._id;
-        // track_alt.user.name = user.name
+        track_alt.user.name = user.name
 
         track_db.insert(track_alt, (err)=>{
             if(err) console.log(err);

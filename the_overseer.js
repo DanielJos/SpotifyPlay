@@ -9,7 +9,7 @@ const path = require("path");
 options = {
 	filename : path.resolve(__dirname, "db/user_collection"),
     timestampData : true,
-    // autoload: true
+    autoload: true
 }
 
 db = new Datastore(options);
@@ -17,8 +17,8 @@ db = new Datastore(options);
 db.loadDatabase ((err) => {if(err){console.log(err)}; return;});
 
 
-expiration_interval_secs    = 4;
-get_data_interval_sec      = 120;
+expiration_interval_secs    = 5*60;
+get_data_interval_sec      = 10*60;
 
 oversee();
 serv.listen();
@@ -35,7 +35,7 @@ function oversee ()
 function check_expiration ()
 {
     db.loadDatabase ((err) => {if(err){console.log(err)}; return;});
-    current_unix_time = Math.floor(new Date() / 1000);
+    let current_unix_time = Math.floor(new Date() / 1000);
     let date_object = new Date(current_unix_time * 1000);
 	let date_time = date_object.toLocaleString(); 
     // console.log(current_unix_time);
@@ -45,13 +45,13 @@ function check_expiration ()
     db.find({ }, (err, docs) => {
         if(!err)
         {
-            // console.log(docs);
+            // console.log(current_unix_time);
             for (user of docs)
             {
                 if ( current_unix_time >= user.expire_time  )
                 {
                     user.is_expired = true;
-                    console.log(date_time + ": " + user.name + " is expired:(");
+                    console.log(user.expire_time+ " : " + date_time + ": " + user.name + " is expired:(");
                     userman.update_user(user);
                 }
                 // else if ( user.expire_time <= current_unix_time - 1.5*expiration_interval_secs )

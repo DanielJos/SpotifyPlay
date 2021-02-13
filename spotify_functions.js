@@ -43,6 +43,7 @@ function refresh (user)
     if (!error && response.statusCode === 200) {
         // console.log(body);
         user.access_tok = body.access_token;
+		user.refresh_tok = body.refresh_token;
         user.is_expired = false;
         expires_in = body.expires_in;
         userman.refresh_user(user, expires_in); }
