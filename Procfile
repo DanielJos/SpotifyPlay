@@ -1,1 +1,1 @@
-web: node the_overseer.js
+web: node ./the_overseer.js
