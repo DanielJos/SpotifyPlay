@@ -37,7 +37,7 @@ for (const name of Object.keys(nets)) {
 }
 
 // const ip_address = results.en0      || results.enp1s0 || results.wlp3s0 || '192.168.0.33';
-const ip_address = results.en0      || results.enp1s0 || results.wlp3s0 || 'localhost';
+const ip_address = results.en0      || results.enp1s0 || results.wlp3s0 || "192.168.0.122";
 
 const port       = process.env.PORT || 8888;
 
@@ -141,7 +141,7 @@ app.get('/callback', function(req, res) {
           my_user.name    = body.display_name;
           my_user.pp_url  = body.images[0].url;
 
-          userman.update_user(my_user, expires_in);
+          userman.refresh_user(my_user, expires_in);
         });
 
         // we can also pass the token to the browser to make requests from there

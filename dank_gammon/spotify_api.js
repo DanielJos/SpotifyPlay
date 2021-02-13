@@ -19,7 +19,7 @@ index_opts = {
 pl_db = new Datastore(options);
 
 options = {
-	filename : '../db/user_collection',
+	filename : path.resolve(__dirname, "../db/user_collection"),
 	timestampData : true
 }
 user_db = new Datastore(options);

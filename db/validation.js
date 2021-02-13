@@ -1,4 +1,4 @@
-const Validator = require('jsonSchema').Validator
+const Validator = require('jsonschema').Validator
 let v = new Validator();
 
 let user_schema = {
@@ -6,13 +6,14 @@ let user_schema = {
     "type": "object",
     "properties": 
     {
-        "_id":          {"type": "string"},
-        "name":         {"type": "string"},
-        "access_tok":   {"type": "string"},
-        "refresh_tok":  {"type": "string"},
-        "expire_time":  {"type": "number"},
-        "is_expired":      {"type": "boolean"},
-        "pp_url":       {"type": "string"}
+        "_id":                  {"type": "string"},
+        "name":                 {"type": "string"},
+        "access_tok":           {"type": "string"},
+        "refresh_tok":          {"type": "string"},
+        "expire_time":          {"type": "number"},
+        "is_expired":           {"type": "boolean"},
+        // 'latest_track_cursor':  {"type": "string"},
+        "pp_url":               {"type": "string"}
     },
     "required": ["_id", "name", "access_tok"]
 } 
