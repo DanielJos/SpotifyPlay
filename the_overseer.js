@@ -38,7 +38,6 @@ function check_expiration ()
         {
             for (user of docs)
             {
-                console.log("checking:")
                 if ( current_unix_time >= user.expire_time  )
                 {
                     user.is_expired = true;
