@@ -18,7 +18,7 @@ const { networkInterfaces } = require("os");
 const nets = networkInterfaces();
 // const d_g = require("../dank_gammon/app.js"); 
 // const dbms = require("../dank_gammon/dbms.js");
-const userman = require("../db/user_man.js");
+const userman = require("../user_man.js");
 const config = require("config");
 
 // Get network deets
@@ -36,8 +36,8 @@ for (const name of Object.keys(nets)) {
     }
 }
 
-// const ip_address = results.en0      || results.enp1s0 || results.wlp3s0 || '192.168.0.33';
-const ip_address = results.en0      || results.enp1s0 || results.wlp3s0 || "192.168.0.122";
+const ip_address = results.en0      || results.enp1s0 || results.wlp3s0 || 'localhost';
+// const ip_address = results.en0      || results.enp1s0 || results.wlp3s0 || "192.168.0.24";
 
 const port       = process.env.PORT || 8888;
 

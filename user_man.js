@@ -12,14 +12,14 @@ upd_opts = {
 // }
 
 options = {
-	filename : path.resolve(__dirname, "user_collection"),
+	filename : path.resolve(__dirname, "db/user_collection"),
 	timestampData : true
 }
 
 user_db = new Datastore(options);
 
 options = {
-	filename : path.resolve(__dirname, "track_collection"),
+	filename : path.resolve(__dirname, "db/track_collection"),
 	timestampData : true
 }
 
@@ -58,6 +58,8 @@ function refresh_user (user, expires_in)
     }
 }
 
+// Identifies user by id and updates the associated user
+// i.e user.id = x, user.name = dave --> updates id x to name dave
 function update_user (user) {
     if(val.validate(user))
     {
@@ -66,7 +68,6 @@ function update_user (user) {
                     console.log(err);
                     return false;
                 }
-                console.log
                 return true;
             } );
     }
@@ -76,13 +77,16 @@ function update_user (user) {
     }
 }
 
-function insert_tracks (user_id, tracks)
+function insert_tracks (user, tracks)
 {
+    let track_alt;
     for(track of tracks)
     {
         track_alt = track;
-        track_alt._id = track.played_at + user_id;
-        track_alt.user_id = user_id;
+        track_alt._id = track.played_at + user.id;
+        track_alt.user = {id: user.id, name: user.name };
+        // track_alt.user.id = user._id;
+        // track_alt.user.name = user.name
 
         track_db.insert(track_alt, (err)=>{
             if(err) console.log(err);

@@ -1,8 +1,9 @@
 const got 	= require('got');
 const config = require("config");
 var request = require('request'); // "Request" library
-const userman = require('./db/user_man.js');
+const userman = require('./user_man.js');
 const _ = require('lodash');
+const { response } = require('express');
 
 let scope = 'user-read-private user-read-email user-read-playback-state user-read-recently-played playlist-read-collaborative playlist-modify-public playlist-read-private user-top-read';
 let client_id = config.get("cli-id"); // Your client id
@@ -50,16 +51,20 @@ function refresh (user)
 
 async function get (user)
 {
-    const context = {
+    let context = {
 		Authorization: 'Bearer ' + user.access_tok
     };
-    console.log(`Getting data for ${user.name} (id: ${user._id})...`);
+    // console.log(`Getting data for ${user.name} (id: ${user._id}).`);
     // let collaborative_playlists = await get_playlists(context);
 	// let playlist_tracks = await get_playlist_tracks(context, collaborative_playlists);
-	
-	await get_historic_tracks(context, user._id);
-    // console.log(playlist_tracks);
-    // insert_playlists(playlist_tracks);
+	try {
+		await get_historic_tracks(context, user);
+		// console.log(playlist_tracks);
+		// insert_playlists(playlist_tracks);
+	} catch (error) {
+		console.log(error);
+	}
+	// console.log(`Finished Getting data for\t${user.name} (id: ${user._id}).`);
 }
 
 // Local Functions //
@@ -104,22 +109,40 @@ async function get_playlist_tracks(context, collaborative_playlists)
 	return tracks;
 }
 
-async function get_historic_tracks(context, user_id)
+async function get_historic_tracks(context, user)
 {
 	let tracks = [];
 	
-	current_unix_time = Math.floor(new Date() / 1000); 
+	// let current_unix_time = Math.floor(new Date() / 1000); 
+	let response;
 
-	response = await instance(`https://api.spotify.com/v1/me/player/recently-played?limit=50&after=${current_unix_time}`, {context}).json();
-	//response = await instance(response.next, {context}).json();
-	console.log(response);
-	// if (response) after = response.cursors.before;
-	_.map(response.items, (o) => {
-		// console.log(`${o.track.name} : ${o.played_at}`);
-		// tracks.push( {name: o.track.name, track_id: o.track.id, played_at: o.played_at} );
-	});	
+	before_cursor = user.latest_track_cursor || 0
 
-	// userman.insert_tracks(user_id, tracks);
+	if(user.latest_track_cursor_ms)
+	{
+		response = await instance(`https://api.spotify.com/v1/me/player/recently-played?limit=50&after=${user.latest_track_cursor_ms}`, {context}).json();
+	}
+	else
+	{
+		response = await instance(`https://api.spotify.com/v1/me/player/recently-played?limit=50`, {context}).json();
+	}
+	// if response returns some tracks then add those tracks to the db
+	if(response.items.length)
+	{
+		console.log(`${response.items.length} new tracks for\t${user.name} (id: ${user._id}).`);
+		user.latest_track_cursor_ms = parseInt(response.cursors.after);
+
+		_.map(response.items, (o) => {
+			// console.log(`${o.track.name} : ${o.played_at}`);
+			tracks.push( {name: o.track.name, track_id: o.track.id, played_at: o.played_at} );
+		});	
+		userman.insert_tracks(user, tracks);
+		userman.update_user(user);
+	}
+	else
+	{
+		console.log(`No data to get for\t${user.name} (id: ${user._id}).`);
+	}
 }
 
 module.exports = {
