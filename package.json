@@ -4,7 +4,7 @@
   "description": "Basic examples of the Spotify authorization flows through OAuth 2",
   "version": "0.0.2",
   "scripts": {
-    "start": "node the_overseer.js"
+    "start": "mkdir db; node the_overseer.js"
   },
   "engines": {
     "node": "14.5.0"
