@@ -1,7 +1,7 @@
 const got 	= require('got');
 const config = require("config");
 var request = require('request'); // "Request" library
-const userman = require('./user_man.js');
+const userman = require('./db_man.js');
 const _ = require('lodash');
 const { response } = require('express');
 

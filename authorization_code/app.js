@@ -18,7 +18,7 @@ const { networkInterfaces } = require("os");
 const nets = networkInterfaces();
 // const d_g = require("../dank_gammon/app.js"); 
 // const dbms = require("../dank_gammon/dbms.js");
-const userman = require("../user_man.js");
+const userman = require("../db_man.js");
 const config = require("config");
 
 // Get network deets
@@ -189,7 +189,7 @@ function listen ()
   // http listener created on ${ip_address}:${port}
   app.listen(port, ()=>{
       // debug(`Listening on: ${ip_address}:${port}`)
-      console.log("Listening...")
+      console.log(`Listening on ${port}...`)
       });
 }
 

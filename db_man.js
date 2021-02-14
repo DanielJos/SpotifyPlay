@@ -13,14 +13,16 @@ upd_opts = {
 
 options = {
 	filename : path.resolve(__dirname, "db/user_collection"),
-	timestampData : true
+	timestampData : true,
+    autoload: true
 }
 
 user_db = new Datastore(options);
 
 options = {
 	filename : path.resolve(__dirname, "db/track_collection"),
-	timestampData : true
+	timestampData : true,
+    autoload: true
 }
 
 track_db = new Datastore(options);
@@ -29,8 +31,8 @@ track_db = new Datastore(options);
 user_db.persistence.setAutocompactionInterval(1*1000);
 track_db.persistence.setAutocompactionInterval(1*1000);
 
-user_db.loadDatabase ((err) => {console.log(err); return;});
-track_db.loadDatabase();
+// user_db.loadDatabase ((err) => {console.log(err); return;});
+// track_db.loadDatabase();
 
 // take the USER ID and update the user entry with the given ACCESS TOKEN
 function refresh_user (user, expires_in)
@@ -97,8 +99,28 @@ function insert_tracks (user, tracks)
 
 }
 
+// Returns PROMISE of ARRAY of USER matching the CRITERIA
+function find_users (criteria)
+{
+    return new Promise((resolve, reject)=>{
+        user_db.find(criteria, (err, docs) => {
+            if(!err)
+            {
+                // console.log(docs);
+                resolve(docs);
+            }
+            else
+            {
+                reject(err);
+            }
+        });
+    });
+
+}
+
 module.exports = {
     refresh_user: refresh_user,
     update_user: update_user,
-    insert_tracks: insert_tracks
+    insert_tracks: insert_tracks,
+    find_users: find_users
 }
