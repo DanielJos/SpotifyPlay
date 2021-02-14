@@ -38,7 +38,6 @@ for (const name of Object.keys(nets)) {
 
 const ip_address = results.en0      || results.enp1s0 || results.wlp3s0 || 'localhost';
 const url = "https://dankgammon.herokuapp.com"
-// const ip_address = results.en0      || results.enp1s0 || results.wlp3s0 || "192.168.0.24";
 
 const port       = process.env.PORT || 8888;
 
@@ -187,9 +186,7 @@ app.get('/refresh_token', function(req, res) {
 
 function listen ()
 {
-  // http listener created on ${ip_address}:${port}
   app.listen(port, ()=>{
-      // debug(`Listening on: ${ip_address}:${port}`)
       console.log(`Listening on ${port}...`)
       });
 }
