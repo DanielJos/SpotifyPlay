@@ -37,13 +37,14 @@ for (const name of Object.keys(nets)) {
 }
 
 const ip_address = results.en0      || results.enp1s0 || results.wlp3s0 || 'localhost';
+const url = "https://dankgammon.herokuapp.com"
 // const ip_address = results.en0      || results.enp1s0 || results.wlp3s0 || "192.168.0.24";
 
 const port       = process.env.PORT || 8888;
 
 var client_id = config.get("cli-id"); // Your client id
 var client_secret = config.get("cli-secret"); // Your secret
-var redirect_uri = `http://${ip_address}:8888/callback/`; // Your redirect uri
+var redirect_uri = `${url}/callback/`; // Your redirect uri
 /**
  * Generates a random string containing numbers and letters
  * @param  {number} length The length of the string
@@ -145,7 +146,7 @@ app.get('/callback', function(req, res) {
         });
 
         // we can also pass the token to the browser to make requests from there
-        res.redirect(`http://${ip_address}:8888/#` +
+        res.redirect(`${url}/#` +
           querystring.stringify({
             access_token: my_user.access_tok,
             refresh_token:my_user.refresh_tok
