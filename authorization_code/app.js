@@ -36,6 +36,7 @@ for (const name of Object.keys(nets)) {
     }
 }
 
+// why wont it update this?
 const ip_address = results.en0      || results.enp1s0 || results.wlp3s0 || 'localhost';
 const url = "https://dankgammon.herokuapp.com"
 
