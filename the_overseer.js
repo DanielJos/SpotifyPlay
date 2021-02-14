@@ -5,7 +5,7 @@ const spotify = require("./spotify_functions.js");
 const dbman = require("./db_man.js");
 const path = require("path");
 
-expiration_interval_secs    = 5*60*;
+expiration_interval_secs    = 5*60;
 get_data_interval_sec      = 6*60;
 
 oversee();
