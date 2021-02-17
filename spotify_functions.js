@@ -55,17 +55,12 @@ async function get (user)
     let context = {
 		Authorization: 'Bearer ' + user.access_tok
     };
-    // console.log(`Getting data for ${user.name} (id: ${user._id}).`);
-    // let collaborative_playlists = await get_playlists(context);
-	// let playlist_tracks = await get_playlist_tracks(context, collaborative_playlists);
 	try {
 		await get_historic_tracks(context, user);
-		// console.log(playlist_tracks);
-		// insert_playlists(playlist_tracks);
+
 	} catch (error) {
 		console.log(error);
 	}
-	// console.log(`Finished Getting data for\t${user.name} (id: ${user._id}).`);
 }
 
 // Local Functions //
@@ -137,7 +132,11 @@ async function get_historic_tracks(context, user)
 			// console.log(`${o.track.name} : ${o.played_at}`);
 			tracks.push( {name: o.track.name, track_id: o.track.id, played_at: o.played_at} );
 		});	
-		userman.insert_tracks(user, tracks);
+		errs = await userman.insert_tracks(user, tracks);
+		if(errs)
+		{
+			console.log(errs);
+		}
 		userman.update_user(user);
 	}
 	else
