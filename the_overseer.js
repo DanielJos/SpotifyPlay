@@ -1,4 +1,3 @@
-require('newrelic');
 const Datastore = require('nedb');
 const { listen } = require('./authorization_code/app.js');
 const auth_server = require("./authorization_code/app.js");
