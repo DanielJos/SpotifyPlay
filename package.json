@@ -3,6 +3,12 @@
   "name": "web-api-auth-examples",
   "description": "Basic examples of the Spotify authorization flows through OAuth 2",
   "version": "0.0.2",
+  "scripts": {
+    "start": "node the_overseer.js"
+  },
+  "engines": {
+    "node": "14.5.0"
+  },
   "dependencies": {
     "config": "^3.3.1",
     "cookie-parser": "^1.4.5",
@@ -12,7 +18,10 @@
     "got": "^11.8.1",
     "jsonschema": "^1.4.0",
     "lodash": "^4.17.20",
+    "mongodb": "^3.6.4",
+    "mongoose": "^5.11.16",
     "nedb": "^1.8.0",
+    "newrelic": "^7.1.1",
     "nodemon": "^2.0.7",
     "os": "^0.1.1",
     "path": "^0.12.7",

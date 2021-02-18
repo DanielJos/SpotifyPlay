@@ -18,7 +18,7 @@ const { networkInterfaces } = require("os");
 const nets = networkInterfaces();
 // const d_g = require("../dank_gammon/app.js"); 
 // const dbms = require("../dank_gammon/dbms.js");
-const userman = require("../user_man.js");
+const userman = require("../db_man.js");
 const config = require("config");
 
 // Get network deets
@@ -36,14 +36,16 @@ for (const name of Object.keys(nets)) {
     }
 }
 
-const ip_address = results.en0      || results.enp1s0 || results.wlp3s0 || 'localhost';
-// const ip_address = results.en0      || results.enp1s0 || results.wlp3s0 || "192.168.0.24";
+// why wont it update this?
+// const ip_address = results.en0      || results.enp1s0 || results.wlp3s0 || 'localhost';
+const url = "https://dankgammon.herokuapp.com"
+// const url = "http://localhost:8888"
 
 const port       = process.env.PORT || 8888;
 
 var client_id = config.get("cli-id"); // Your client id
 var client_secret = config.get("cli-secret"); // Your secret
-var redirect_uri = `http://${ip_address}:8888/callback/`; // Your redirect uri
+var redirect_uri = `${url}/callback/`; // Your redirect uri
 /**
  * Generates a random string containing numbers and letters
  * @param  {number} length The length of the string
@@ -140,12 +142,13 @@ app.get('/callback', function(req, res) {
           my_user._id     = body.id;
           my_user.name    = body.display_name;
           my_user.pp_url  = body.images[0].url;
+          my_user.latest_track_cursor_ms;
 
           userman.refresh_user(my_user, expires_in);
         });
 
         // we can also pass the token to the browser to make requests from there
-        res.redirect(`http://${ip_address}:8888/#` +
+        res.redirect(`${url}/#` +
           querystring.stringify({
             access_token: my_user.access_tok,
             refresh_token:my_user.refresh_tok
@@ -186,9 +189,8 @@ app.get('/refresh_token', function(req, res) {
 
 function listen ()
 {
-  // http listener created on ${ip_address}:${port}
-  app.listen(port, ip_address, ()=>{
-      debug(`Listening on: ${ip_address}:${port}`)
+  app.listen(port, ()=>{
+      console.log(`Listening on ${port}...`)
       });
 }
 

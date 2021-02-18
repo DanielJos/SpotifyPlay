@@ -1,1 +1,1 @@
-web: node the_overseer.js
+worker: node the_overseer.js
