@@ -55,6 +55,7 @@ async function get (user)
     let context = {
 		Authorization: 'Bearer ' + user.access_tok
     };
+<<<<<<< HEAD
 	// get user play history
 	try {
 		await get_historic_tracks(context, user);
@@ -74,6 +75,14 @@ async function get (user)
 		// push tracks objects to the playlist docs
 	}
 
+=======
+	try {
+		await get_historic_tracks(context, user);
+
+	} catch (error) {
+		console.log(error);
+	}
+>>>>>>> 34690f5700cbc33d6fc8a47988864d6232da98a7
 }
 
 // Local Functions //
@@ -163,6 +172,7 @@ async function get_historic_tracks(context, user)
 			// console.log(`${o.track.name} : ${o.played_at}`);
 			tracks.push( {name: o.track.name, track_id: o.track.id, played_at: o.played_at} );
 		});	
+<<<<<<< HEAD
 		try {
 			errs = await userman.insert_tracks(user, tracks);
 		} catch (error) {
@@ -173,6 +183,14 @@ async function get_historic_tracks(context, user)
 		} catch (error) {
 			console.log(error);
 		}
+=======
+		errs = await userman.insert_tracks(user, tracks);
+		if(errs)
+		{
+			console.log(errs);
+		}
+		userman.update_user(user);
+>>>>>>> 34690f5700cbc33d6fc8a47988864d6232da98a7
 	}
 	else
 	{

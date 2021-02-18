@@ -21,9 +21,6 @@ async function refresh_user (user, expires_in)
     let unix_time = Math.floor(new Date() / 1000);
     user.expire_time = unix_time + expires_in;
     user.is_expired = false;
-    // console.log("down");
-    // console.log(user);
-    // console.log("up");
     try {
         users = await model.User.updateOne({_id: user._id}, user, { upsert: true });
         return users;
