@@ -1,29 +1,16 @@
 require('newrelic');
 const Datastore = require('nedb');
 const { listen } = require('./authorization_code/app.js');
-<<<<<<< HEAD
 const auth_server = require("./authorization_code/app.js");
-=======
-const server = require("./authorization_code/app.js");
->>>>>>> 34690f5700cbc33d6fc8a47988864d6232da98a7
 const spotify = require("./spotify_functions.js");
 const dbman = require("./db_man.js");
 const path = require("path");
 
-<<<<<<< HEAD
 expiration_interval_secs = 5*60;
 get_data_interval_sec    = 6*60;
 
 oversee();
 auth_server.listen();
-=======
-
-expiration_interval_secs    = 5;
-get_data_interval_sec      = 6;
-
-oversee();
-server.listen();
->>>>>>> 34690f5700cbc33d6fc8a47988864d6232da98a7
 
 // let current_unix_time;
 
