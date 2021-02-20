@@ -4,7 +4,8 @@
   "description": "Basic examples of the Spotify authorization flows through OAuth 2",
   "version": "0.0.2",
   "scripts": {
-    "start": "node the_overseer.js"
+    "start": "node the_overseer.js",
+    "dev": "set DEBUG=sp:debug && nodemon the_overseer.js"
   },
   "engines": {
     "node": "14.5.0"
@@ -21,7 +22,6 @@
     "mongodb": "^3.6.4",
     "mongoose": "^5.11.16",
     "nedb": "^1.8.0",
-    "newrelic": "^7.1.1",
     "nodemon": "^2.0.7",
     "os": "^0.1.1",
     "path": "^0.12.7",

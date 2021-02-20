@@ -7,6 +7,7 @@ const path = require("path");
 
 expiration_interval_secs = 5*60;
 get_data_interval_sec    = 6*60;
+get_pl_interval_sec      = 60*60;
 
 oversee();
 auth_server.listen();
@@ -15,8 +16,33 @@ auth_server.listen();
 
 function oversee ()
 {
-    setInterval(check_expiration, expiration_interval_secs*1000 );
-    setInterval(get_user_data, get_data_interval_sec*1000 );
+    // setInterval(check_expiration, expiration_interval_secs*1000 );
+
+    // get listen history
+    setInterval(async ()=>{
+        try {
+            const users = await dbman.find_users({"is_expired":false});
+            for (user of users)
+                {
+                    spotify.get_historic(user);
+                }
+        } catch (error) {
+            console.log(error);
+        }
+    }, get_data_interval_sec*1000);
+
+    // get playlist data
+    setInterval(async ()=>{
+        try {
+            const users = await dbman.find_users({"is_expired":false});
+            for (user of users)
+                {
+                    spotify.get_pl(user);
+                }
+        } catch (error) {
+            console.log(error);
+        }
+    }, get_pl_interval_sec*1000);
 }
 
 async function check_expiration ()
@@ -46,18 +72,5 @@ async function check_expiration ()
             
     } catch (error) {
         console.log(err);
-    }
-}
-
-async function get_user_data()
-{
-    try {
-        const users = await dbman.find_users({"is_expired":false});
-        for (user of users)
-            {
-                spotify.get(user);
-            }
-    } catch (error) {
-        console.log(error);
     }
 }

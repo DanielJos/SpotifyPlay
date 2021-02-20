@@ -1,7 +1,7 @@
 const got 	= require('got');
 const config = require("config");
 var request = require('request'); // "Request" library
-const userman = require('./db_man.js');
+const dbman = require('./db_man.js');
 const _ = require('lodash');
 const { response } = require('express');
 
@@ -46,11 +46,11 @@ function refresh (user)
 		user.refresh_tok = body.refresh_token;
         user.is_expired = false;
         expires_in = body.expires_in;
-        userman.refresh_user(user, expires_in); }
+        dbman.refresh_user(user, expires_in); }
     });
 }
 
-async function get (user)
+async function get_historic (user)
 {
     let context = {
 		Authorization: 'Bearer ' + user.access_tok
@@ -58,22 +58,52 @@ async function get (user)
 	// get user play history
 	try {
 		await get_historic_tracks(context, user);
-		console.log(get_playlists(context));
 	} catch (error) {
 		console.log(error);
 	}
+}
 
-	// get playlist data
-	let collaborative_playlists = get_playlists(context)
+async function get_pl (user)
+{
+	let context = {
+		Authorization: 'Bearer ' + user.access_tok
+    };
+
+	// Why do I need an await here!!!!!!!!!!!!!!!! :(((
+	let collaborative_playlists = await get_playlists(context)
+	
 	if(collaborative_playlists){
-		let tracks = get_playlist_tracks(context, collaborative_playlists);
-		console.log(collaborative_playlists);
+		for(pl of collaborative_playlists){
+			err = await dbman.update_playlist(pl);
+			if(err) console.log(err);
+		}
 
-		// save playlists in db
+		// And here!!!!
+		let tracks = await get_playlist_tracks(context, collaborative_playlists);
+		let unique_users = [];
+		let users = [];
+		if(tracks)
+		{
+			for(track of tracks)
+			{
+				dbman.insert_pl_track(track)
+				users.push({id: track.adder.id, pl_id: track.playlist.id})
+			}
+			
+			users_json = users.map((obj)=>JSON.stringify(obj));
+			users_json_set = new Set(users_json);
+			unique_users = Array.from(users_json_set)
+			// console.log(unique_users);
+		}
+		else console.log("No tracks");
+	
 
-		// push tracks objects to the playlist docs
+		for(user of unique_users)
+		{
+			dbman.insert_pl_user(user);
+		}
 	}
-
+ 
 }
 
 // Local Functions //
@@ -86,7 +116,6 @@ async function get_playlists(context)
 		const response = await instance('https://api.spotify.com/v1/me/playlists?limit=50&offset=0', {context}).json();		
 		_.map(response.items, (o) => { 
 			if (o.collaborative== true) { collaborative_playlists.push({ name : o.name, id : o.id })}
-			return
 		});
 		
 		total 	= response.total - 50;
@@ -97,13 +126,12 @@ async function get_playlists(context)
 			const response = await instance(`https://api.spotify.com/v1/me/playlists?limit=50&offset=${offset}`, {context}).json();		
 			_.map(response.items, (o) => { 
 				if (o.collaborative== true) { collaborative_playlists.push({ name : o.name, id : o.id })}
-				return
 			});
 			total 	-= 50;
 			offset 	+= 50;
 		}
-
 		return collaborative_playlists;
+
 	} catch (error) {
 		console.log("Failed to get playlist data.");
 		console.log(error);
@@ -118,13 +146,33 @@ async function get_playlist_tracks(context, collaborative_playlists)
 	for (playlist of collaborative_playlists)
 	{
 		try {
-			const response = await instance(`https://api.spotify.com/v1/playlists/${playlist.id}/tracks`, {context}).json();
+			const response = await instance(`https://api.spotify.com/v1/playlists/${playlist.id}/tracks?limit=100`, {context}).json();
 			_.map(response.items, (o) => {
-				tracks.push({ playlist: {id: playlist.id, name: playlist.name}, track: {id: o.track.id, name: o.track.name}, adder: o.added_by, added_at: o.added_at }); 
+				tracks.push({ playlist: {id: playlist.id, name: playlist.name}, track: {id: o.track.id, name: o.track.name}, adder: o.added_by, added_at: o.added_at });
 			});	
+
+			total 	= response.total - 100;
+			offset 	= 100;
+
+			while (total > 0)
+			{
+				try {
+					const response = await instance(`https://api.spotify.com/v1/playlists/${playlist.id}/tracks?limit=100&offset=${offset}`, {context}).json();
+					_.map(response.items, (o) => {
+						tracks.push({ playlist: {id: playlist.id, name: playlist.name}, track: {id: o.track.id, name: o.track.name}, adder: o.added_by, added_at: o.added_at }); 
+						// console.log(o.track.name); 
+					});	
+					total 	-= 100;
+					offset 	+= 100;
+				} catch (error) {
+					console.log(error);
+				}
+			}	
 		} catch (error) {
 			console.log(error);
-		}		
+		}
+
+		
 	}
 	return tracks;
 }
@@ -164,12 +212,12 @@ async function get_historic_tracks(context, user)
 			tracks.push( {name: o.track.name, track_id: o.track.id, played_at: o.played_at} );
 		});	
 		try {
-			errs = await userman.insert_tracks(user, tracks);
+			errs = await dbman.insert_tracks(user, tracks);
 		} catch (error) {
 			console.log(errs)
 		}
 		try {
-			userman.update_user(user);
+			dbman.update_user(user);
 		} catch (error) {
 			console.log(error);
 		}
@@ -182,5 +230,6 @@ async function get_historic_tracks(context, user)
 
 module.exports = {
     refresh:    refresh,
-    get:        get 
+    get_historic: get_historic,
+	get_pl: get_pl
 }

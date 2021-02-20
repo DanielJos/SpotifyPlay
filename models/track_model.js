@@ -9,7 +9,7 @@ const track_schema =  new mongoose.Schema({
         name:   {type: String},
         id:     {type: String}   
     } 
-}, {timestamps: true});
+}, {timestamps: false});
 
 const Track = mongoose.model("track", track_schema);
 
